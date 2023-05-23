@@ -40,6 +40,7 @@ public class Transfer implements SimpleCommand {
         } else {
             invoker = Component.text("Console", NamedTextColor.YELLOW);
         }
+
         Component message = invoker.append(Component.text(" is moving you to ", NamedTextColor.GRAY).append(Component.text(invocation.arguments()[1], NamedTextColor.GREEN)));
         String serverName = invocation.arguments()[1];
         RegisteredServer registeredServer = server.getServer(serverName).orElse(null);
