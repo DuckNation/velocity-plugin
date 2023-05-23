@@ -1,0 +1,6 @@
+port: 6247
+# The port the server will listen on
+host: "localhost"
+# The host the server will listen on
+password: "password"
+# The password to connect to the server
