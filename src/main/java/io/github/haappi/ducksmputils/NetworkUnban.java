@@ -8,26 +8,25 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
-import com.velocitypowered.api.event.PostOrder;
-import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import redis.clients.jedis.Jedis;
 
-public class NetworkBan {
-    public static BrigadierCommand createBrigadierCommand(final ProxyServer server) {
+import java.util.UUID;
+
+public class NetworkUnban {
+        public static BrigadierCommand createBrigadierCommand(final ProxyServer server) {
         LiteralCommandNode<CommandSource> helloNode = LiteralArgumentBuilder
-                .<CommandSource>literal("nban")
+                .<CommandSource>literal("nunban")
                 .requires(source -> source.hasPermission("duck.nban"))
-                .then(RequiredArgumentBuilder.<CommandSource, String>argument("player", StringArgumentType.word())
+                .then(RequiredArgumentBuilder.<CommandSource, String>argument("player", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
                             // Here we provide the names of the players along with a tooltip,
                             // which can be used as an explanation of a specific argument or as a simple decoration
                             server.getAllPlayers().forEach(player -> builder.suggest(
-                                    player.getUsername(),
+                                    player.getUniqueId().toString(),
                                     // A VelocityBrigadierMessage takes a component.
                                     // In this case, the player's name is provided with a rainbow
                                     // gradient created by MiniMessage (Library available since Velocity 3.1.2+)
@@ -39,33 +38,15 @@ public class NetworkBan {
                         }).then(RequiredArgumentBuilder.<CommandSource, String>argument("reason", StringArgumentType.greedyString())
                                 .executes(context -> {
                                     String player = context.getArgument("argument", String.class);
-                                    String reason = context.getArgument("reason", String.class);
 
-                                    server.getPlayer(player).ifPresent(p -> {
-                                        p.disconnect(Component.text("You have been banned. Reason: ", NamedTextColor.RED).append(Component.text(reason, NamedTextColor.YELLOW)));
 
-                                        try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
-                                            jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
-                                            jedis.set("banned:" + p.getUniqueId().toString(), reason);
-                                        }
-                                    });
+                                    try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
+                                        jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
+                                        jedis.del("banned:" + player);
+                                    }
 
                                     return Command.SINGLE_SUCCESS;
                                 }))).build();
         return new BrigadierCommand(helloNode);
     }
-
-    @Subscribe(order = PostOrder.FIRST)
-    public void onPlayerJoin(ServerConnectedEvent event) {
-        try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
-            jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
-            String reason = jedis.get("banned:" + event.getPlayer().getUniqueId().toString());
-            if (reason != null) {
-                event.getPlayer().disconnect(Component.text("You have been banned. Reason: ", NamedTextColor.RED).append(Component.text(reason, NamedTextColor.YELLOW)));
-            }
-        }
-    }
-
 }
-
-

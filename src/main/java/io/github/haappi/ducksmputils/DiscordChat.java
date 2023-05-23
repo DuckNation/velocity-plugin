@@ -4,7 +4,6 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -66,7 +65,7 @@ public class DiscordChat {
         write(String.format("**%s/%s** players online. Join at **quack.boo**\n\nPlayers: %s", server.getPlayerCount(), server.getConfiguration().getShowMaxPlayers(), onlinePlayerNames), Enums.STATUS_UPDATE);
     }
 
-        private void write(String message, Enums type) {
+    private void write(String message, Enums type) {
         try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
             jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
             jedis.publish("toDiscord", type + ";" + message);

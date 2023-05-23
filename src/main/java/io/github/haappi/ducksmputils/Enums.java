@@ -16,15 +16,6 @@ public enum Enums {
         this.name = name;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
     public static Enums getByName(String name) {
         for (Enums e : Enums.values()) {
             if (e.getName().equalsIgnoreCase(name)) {
@@ -32,5 +23,14 @@ public enum Enums {
             }
         }
         return null;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

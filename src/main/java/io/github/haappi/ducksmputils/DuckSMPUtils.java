@@ -1,9 +1,7 @@
 package io.github.haappi.ducksmputils;
 
 import com.google.inject.Inject;
-import com.velocitypowered.api.command.CommandManager;
-import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.command.*;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
@@ -36,6 +34,7 @@ public class DuckSMPUtils {
     private YAMLConfigurationLoader loader;
     private JedisPool pool;
     private String jedisPassword;
+    private String encryptionKey;
 
 
     @Inject
@@ -50,6 +49,10 @@ public class DuckSMPUtils {
 
     public ProxyServer getProxy() {
         return proxy;
+    }
+
+    public String getEncryptionKey() {
+        return encryptionKey;
     }
 
     @Subscribe
@@ -69,11 +72,33 @@ public class DuckSMPUtils {
         commandManager.register(commandManager.metaBuilder("moveall")
                 .plugin(this)
                 .build(), new Moveall(proxy));
+        BrigadierCommand networkBan = NetworkBan.createBrigadierCommand(proxy);
+
+        // Finally, you can register the command
+        commandManager.register((CommandMeta) commandManager.metaBuilder("nban")
+                // This will create a new alias for the command "/test"
+                // with the same arguments and functionality
+                .aliases("networkban")
+                .plugin(this), networkBan);
+
+
+        BrigadierCommand networkUnban = NetworkUnban.createBrigadierCommand(proxy);
+
+        commandManager.register((CommandMeta) commandManager.metaBuilder("nunban")
+                // This will create a new alias for the command "/test"
+                // with the same arguments and functionality
+                .aliases("networkunban")
+                .plugin(this), networkUnban);
+
         proxy.getEventManager().register(this, new DiscordChat());
+        proxy.getEventManager().register(this, new Cool());
+
+
+
     }
 
     private void checkConfig() {
-        Path path = Paths.get("config.yml");
+        Path path = Path.of("config.yml");
         loader = YAMLConfigurationLoader.builder()
                 .setDefaultOptions(configurationOptions -> configurationOptions.withShouldCopyDefaults(true))
                 .setPath(path)
@@ -85,21 +110,24 @@ public class DuckSMPUtils {
             e.printStackTrace();
         }
 
-        int port = node.getNode("redis", "port").getInt(-1);
+        int port = node.getNode("redis", "port").getInt(Integer.MIN_VALUE);
         String host = node.getNode("redis", "host").getString(null);
         String password = node.getNode("redis", "password").getString(null);
+        String encryptString = node.getNode("motd", "encryption").getString(null);
         System.out.println(port + " " + host + " " + password);
 
-        if (port == -1 || host == null || password == null) {
-        try {
-            loader.save(node);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        if (port == Integer.MIN_VALUE || host == null || password == null || encryptString == null) {
+            try {
+                loader.save(node);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+                    pool = new JedisPool(host, port);
+        jedisPassword = password;
+        encryptionKey = encryptString;
         }
 
-        pool = new JedisPool(host, port);
-        jedisPassword = password;
 
 
     }
