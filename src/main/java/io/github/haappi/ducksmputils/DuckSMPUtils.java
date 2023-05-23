@@ -71,6 +71,11 @@ public class DuckSMPUtils {
         commandManager.register(commandManager.metaBuilder("moveall")
                 .plugin(this)
                 .build(), new Moveall(proxy));
+
+        commandManager.register(commandManager.metaBuilder("motd")
+                .plugin(this)
+                .build(), new ChangeMotdImage());
+
         BrigadierCommand networkBan = NetworkBan.createBrigadierCommand(proxy);
 
 
@@ -98,7 +103,7 @@ public class DuckSMPUtils {
 
         proxy.getEventManager().register(this, new DiscordChat());
         proxy.getEventManager().register(this, new NetworkBan());
-        proxy.getEventManager().register(this, new Cool());
+        proxy.getEventManager().register(this, new MOTD());
 
 
     }

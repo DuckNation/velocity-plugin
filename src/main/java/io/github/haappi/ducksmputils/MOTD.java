@@ -5,11 +5,35 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.server.ServerPing;
+import com.velocitypowered.api.util.Favicon;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import redis.clients.jedis.Jedis;
 
-public class Cool {
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class MOTD {
+    private static BufferedImage image;
+
+    static {
+        setImage("http://quack.boo/server_motd.png");
+    }
+
+    static void setImage(String url) {
+        HttpURLConnection connection;
+        try {
+            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.connect();
+            image = ImageIO.read(connection.getInputStream());
+            connection.disconnect();
+        } catch (IOException ignored) {
+
+        }
+    }
 
     @Subscribe(order = PostOrder.LAST)
     public void onPlayerPing(ProxyPingEvent event) {
@@ -18,10 +42,15 @@ public class Cool {
             String encryptedIP = Encryption.encrypt(event.getConnection().getRemoteAddress().getAddress().getHostAddress());
             String exists = jedis.get("motd:" + encryptedIP);
 
+            ServerPing builder = event.getPing();
+
             if (exists != null) {
-                ServerPing builder = event.getPing().asBuilder().description(generateMotd(exists)).build();
-                event.setPing(builder);
+                builder = event.getPing().asBuilder().description(generateMotd(exists)).build();
             }
+
+            builder.asBuilder().favicon(Favicon.create(image));
+
+            event.setPing(builder);
         }
     }
 
