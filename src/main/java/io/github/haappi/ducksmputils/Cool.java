@@ -35,7 +35,7 @@ public class Cool {
     }
 
     private Component generateMotd(String username) {
-        return (Component.text("Welcome back to Duck", NamedTextColor.YELLOW).append(Component.text("SMP", NamedTextColor.GOLD)).append(Component.text(" " + username, NamedTextColor.AQUA)).append(Component.text("!")));
+        return (Component.text("Welcome back to ", NamedTextColor.GREEN).append(Component.text("Duck", NamedTextColor.YELLOW).append(Component.text("SMP", NamedTextColor.GOLD)).append(Component.text(" " + username, NamedTextColor.AQUA))));
     }
 
 }

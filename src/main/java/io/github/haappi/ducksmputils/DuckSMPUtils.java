@@ -15,7 +15,6 @@ import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Plugin(
         id = "duck-smp-utils",
@@ -74,25 +73,32 @@ public class DuckSMPUtils {
                 .build(), new Moveall(proxy));
         BrigadierCommand networkBan = NetworkBan.createBrigadierCommand(proxy);
 
-        // Finally, you can register the command
-        commandManager.register((CommandMeta) commandManager.metaBuilder("nban")
+
+        CommandMeta nbanmeta = commandManager.metaBuilder("nban")
                 // This will create a new alias for the command "/test"
                 // with the same arguments and functionality
                 .aliases("networkban")
-                .plugin(this), networkBan);
+                .plugin(this)
+                .build();
+
+        commandManager.register(nbanmeta, networkBan);
 
 
         BrigadierCommand networkUnban = NetworkUnban.createBrigadierCommand(proxy);
 
-        commandManager.register((CommandMeta) commandManager.metaBuilder("nunban")
+
+        CommandMeta nunbanmeta = commandManager.metaBuilder("nunban")
                 // This will create a new alias for the command "/test"
                 // with the same arguments and functionality
                 .aliases("networkunban")
-                .plugin(this), networkUnban);
+                .plugin(this)
+                .build();
+
+        commandManager.register(nunbanmeta, networkUnban);
 
         proxy.getEventManager().register(this, new DiscordChat());
+        proxy.getEventManager().register(this, new NetworkBan());
         proxy.getEventManager().register(this, new Cool());
-
 
 
     }
@@ -123,11 +129,10 @@ public class DuckSMPUtils {
                 throw new RuntimeException(e);
             }
         } else {
-                    pool = new JedisPool(host, port);
-        jedisPassword = password;
-        encryptionKey = encryptString;
+            pool = new JedisPool(host, port);
+            jedisPassword = password;
+            encryptionKey = encryptString;
         }
-
 
 
     }
