@@ -14,6 +14,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Plugin(
@@ -105,11 +106,22 @@ public class DuckSMPUtils {
         proxy.getEventManager().register(this, new NetworkBan());
         proxy.getEventManager().register(this, new MOTD());
 
+        Runtime.getRuntime().addShutdownHook(new Thread(this::cleanup));
+    }
 
+    private void cleanup() {
+        if (pool != null) {
+            pool.close();
+        }
     }
 
     private void checkConfig() {
-        Path path = Path.of("config.yml");
+        Path path = Path.of("plugins/DuckSMP/config.yml");
+        try {
+            Files.createDirectories(Path.of("plugins/DuckSMP/"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         loader = YAMLConfigurationLoader.builder()
                 .setDefaultOptions(configurationOptions -> configurationOptions.withShouldCopyDefaults(true))
                 .setPath(path)
@@ -118,17 +130,23 @@ public class DuckSMPUtils {
         try {
             node = loader.load();
         } catch (IOException e) {
+
+
             e.printStackTrace();
         }
 
         int port = node.getNode("redis", "port").getInt(Integer.MIN_VALUE);
-        String host = node.getNode("redis", "host").getString(null);
-        String password = node.getNode("redis", "password").getString(null);
-        String encryptString = node.getNode("motd", "encryption").getString(null);
+        String host = node.getNode("redis", "host").getString();
+        String password = node.getNode("redis", "password").getString();
+        String encryptString = node.getNode("motd", "encryption").getString();
         System.out.println(port + " " + host + " " + password);
 
         if (port == Integer.MIN_VALUE || host == null || password == null || encryptString == null) {
             try {
+                node.getNode("redis", "port").setValue(Integer.MIN_VALUE);
+                node.getNode("redis", "host").setValue(null);
+                node.getNode("redis", "password").setValue(null);
+                node.getNode("motd", "encryption").setValue(null);
                 loader.save(node);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -138,8 +156,6 @@ public class DuckSMPUtils {
             jedisPassword = password;
             encryptionKey = encryptString;
         }
-
-
     }
 
     public String getJedisPassword() {

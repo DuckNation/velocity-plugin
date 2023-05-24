@@ -5,7 +5,6 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.server.ServerPing;
-import com.velocitypowered.api.util.Favicon;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import redis.clients.jedis.Jedis;
@@ -48,7 +47,7 @@ public class MOTD {
                 builder = event.getPing().asBuilder().description(generateMotd(exists)).build();
             }
 
-            builder.asBuilder().favicon(Favicon.create(image));
+//            builder.asBuilder().favicon(Favicon.create(image));
 
             event.setPing(builder);
         }
