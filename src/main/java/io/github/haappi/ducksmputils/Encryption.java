@@ -28,6 +28,14 @@ public class Encryption {
         return null;
     }
 
+    public static String encrypt(final String strToEncrypt, String default_) {
+        String encrypted = encrypt(strToEncrypt);
+        if (encrypted == null) {
+            return default_;
+        }
+        return encrypted;
+    }
+
     public static SecretKeySpec setKey() {
         MessageDigest sha;
         final String myKey = DuckSMPUtils.getInstance().getEncryptionKey();

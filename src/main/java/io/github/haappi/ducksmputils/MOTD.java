@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MOTD {
     private static BufferedImage image;
@@ -23,6 +24,8 @@ public class MOTD {
     static {
         setImage("https://quack.boo/server_motd.png");
     }
+
+    private final ConcurrentHashMap<String, String> playerNameMapping = new ConcurrentHashMap<>();
 
     static void setImage(String link) {
         try {
@@ -45,26 +48,33 @@ public class MOTD {
 
     @Subscribe(order = PostOrder.LAST)
     public void onPlayerPing(ProxyPingEvent event) {
-        try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
-            jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
-            String encryptedIP = Encryption.encrypt(event.getConnection().getRemoteAddress().getAddress().getHostAddress());
-            String exists = jedis.get("motd:" + encryptedIP);
+        ServerPing.Builder builder = event.getPing().asBuilder();
+        String encryptedIP = Encryption.encrypt(event.getConnection().getRemoteAddress().getAddress().getHostAddress(), "impasta");
+        if (playerNameMapping.containsKey(encryptedIP)) {
+            event.setPing(event.getPing().asBuilder().description(generateMotd(playerNameMapping.get(encryptedIP))).build());
+        } else {
+            try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
+                jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
+                String exists = jedis.get("motd:" + encryptedIP);
 
-            ServerPing.Builder builder = event.getPing().asBuilder();
-
-            if (exists != null) {
-                builder.description(generateMotd(exists));
+                if (exists != null) {
+                    builder.description(generateMotd(exists));
+                    playerNameMapping.put(encryptedIP, exists);
+                }
             }
-
-            Favicon favicon = Favicon.create(image);
-            builder.favicon(favicon);
-
-            event.setPing(builder.build());
         }
+
+        Favicon favicon = Favicon.create(image);
+        builder.favicon(favicon);
+
+        event.setPing(builder.build());
     }
 
     @Subscribe(order = PostOrder.LAST)
     public void onPlayerConnect(ServerPreConnectEvent event) {
+        if (!event.getResult().isAllowed()) {
+            return;
+        }
         try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
             jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
             String encryptedIP = Encryption.encrypt(event.getPlayer().getRemoteAddress().getAddress().getHostAddress());
@@ -73,7 +83,7 @@ public class MOTD {
     }
 
     private Component generateMotd(String username) {
-        return (Component.text("Welcome back to ", NamedTextColor.GREEN).append(Component.text("Duck", NamedTextColor.YELLOW).append(Component.text("SMP", NamedTextColor.GOLD)).append(Component.text(" " + username, NamedTextColor.AQUA))));
+        return (Component.text("Welcome back to ", NamedTextColor.GREEN).append(Component.text("Duck", NamedTextColor.YELLOW).append(Component.text("SMP", NamedTextColor.GOLD)).append(Component.text(", " + username, NamedTextColor.AQUA))));
     }
 
 }

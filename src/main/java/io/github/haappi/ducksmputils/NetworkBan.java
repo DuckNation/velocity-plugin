@@ -10,7 +10,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -51,12 +51,13 @@ public class NetworkBan {
     }
 
     @Subscribe(order = PostOrder.FIRST)
-    public void onPlayerJoin(LoginEvent event) {
+    public void onPlayerJoin(ServerPreConnectEvent event) {
         try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
             jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
             String reason = jedis.get("banned:" + event.getPlayer().getUniqueId().toString());
             if (reason != null) {
                 event.getPlayer().disconnect(Component.text("You have been banned. Reason: ", NamedTextColor.RED).append(Component.text(reason, NamedTextColor.YELLOW)));
+                event.setResult(ServerPreConnectEvent.ServerResult.denied());
             }
         }
     }
