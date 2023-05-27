@@ -60,7 +60,7 @@ public class Transfer implements SimpleCommand {
 
     @Override
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
-        if (invocation.arguments().length == 1) { // suggesting player name
+        if (invocation.arguments().length == 0) { // suggesting player name
             return CompletableFuture.supplyAsync(() -> server.getAllPlayers().stream()
                     .map(Player::getUsername)
                     .collect(Collectors.toList()));
