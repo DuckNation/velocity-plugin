@@ -51,7 +51,7 @@ public class MOTD {
         ServerPing.Builder builder = event.getPing().asBuilder();
         String encryptedIP = Encryption.encrypt(event.getConnection().getRemoteAddress().getAddress().getHostAddress(), "impasta");
         if (playerNameMapping.containsKey(encryptedIP)) {
-            event.setPing(event.getPing().asBuilder().description(generateMotd(playerNameMapping.get(encryptedIP))).build());
+            builder.description(generateMotd(playerNameMapping.get(encryptedIP)));
         } else {
             try (Jedis jedis = DuckSMPUtils.getInstance().getJedis()) {
                 jedis.auth(DuckSMPUtils.getInstance().getJedisPassword());
