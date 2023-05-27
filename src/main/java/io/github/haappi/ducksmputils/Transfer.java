@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -59,9 +60,16 @@ public class Transfer implements SimpleCommand {
 
     @Override
     public CompletableFuture<List<String>> suggestAsync(Invocation invocation) {
-        return CompletableFuture.supplyAsync(() -> server.getAllPlayers().stream()
-                .map(Player::getUsername)
-                .collect(Collectors.toList()));
+        if (invocation.arguments().length == 1) { // suggesting player name
+            return CompletableFuture.supplyAsync(() -> server.getAllPlayers().stream()
+                    .map(Player::getUsername)
+                    .collect(Collectors.toList()));
+        } else { // suggesting server name
+            return CompletableFuture.supplyAsync(() -> server.getAllServers().stream()
+                    .map(RegisteredServer::getServerInfo)
+                    .map(ServerInfo::getName)
+                    .collect(Collectors.toList()));
+        }
     }
 
     @Override

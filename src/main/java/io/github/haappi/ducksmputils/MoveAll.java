@@ -13,10 +13,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class Moveall implements SimpleCommand {
+public class MoveAll implements SimpleCommand {
     private final ProxyServer server;
 
-    public Moveall(ProxyServer server) {
+    public MoveAll(ProxyServer server) {
         this.server = server;
     }
 
@@ -48,7 +48,12 @@ public class Moveall implements SimpleCommand {
 
         DuckSMPUtils.getInstance().getProxy().getScheduler()
                 .buildTask(DuckSMPUtils.getInstance(), () -> {
-                    this.server.getAllPlayers().forEach(player -> player.createConnectionRequest(server).fireAndForget());
+                    this.server.getAllPlayers().forEach(player -> {
+                        if (player.getCurrentServer().isPresent() && player.getCurrentServer().get().getServerInfo().getName().equals(serverName)) {
+                            return;
+                        }
+                        player.createConnectionRequest(server).fireAndForget();
+                    });
                 })
                 .delay(3L, TimeUnit.SECONDS)
                 .schedule();

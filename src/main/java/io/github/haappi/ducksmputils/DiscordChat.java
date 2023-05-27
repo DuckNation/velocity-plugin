@@ -88,14 +88,7 @@ public class DiscordChat {
         String serverName = getServerName(event.getPlayer().getCurrentServer().orElse(null)).toUpperCase();
         write(String.format("[%s] **%s**: %s", serverName, event.getPlayer().getUsername(), event.getMessage()), Enums.CHAT);
 
-        NamedTextColor serverColor;
-        if (serverName.equals("SMP")) {
-            serverColor = NamedTextColor.AQUA;
-        } else if (serverName.equals("EVENTS")) {
-            serverColor = NamedTextColor.GOLD;
-        } else {
-            serverColor = NamedTextColor.WHITE;
-        }
+        NamedTextColor serverColor = NamedTextColor.WHITE;
 
         for (Player player : server.getAllPlayers()) {
             if (!getServerName(player.getCurrentServer().orElse(null)).toUpperCase().equals(serverName)) {

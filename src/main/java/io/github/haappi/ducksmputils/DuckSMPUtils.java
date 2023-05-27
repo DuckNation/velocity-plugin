@@ -16,6 +16,7 @@ import redis.clients.jedis.JedisPool;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 @Plugin(
         id = "duck-smp-utils",
@@ -71,9 +72,9 @@ public class DuckSMPUtils {
                 .build(), broadcast);
         commandManager.register(commandManager.metaBuilder("moveall")
                 .plugin(this)
-                .build(), new Moveall(proxy));
+                .build(), new MoveAll(proxy));
 
-        commandManager.register(commandManager.metaBuilder("motd")
+        commandManager.register(commandManager.metaBuilder("motd-image")
                 .plugin(this)
                 .build(), new ChangeMotdImage());
 
@@ -81,8 +82,6 @@ public class DuckSMPUtils {
 
 
         CommandMeta nbanmeta = commandManager.metaBuilder("nban")
-                // This will create a new alias for the command "/test"
-                // with the same arguments and functionality
                 .aliases("networkban")
                 .plugin(this)
                 .build();
@@ -138,15 +137,15 @@ public class DuckSMPUtils {
         int port = node.getNode("redis", "port").getInt(Integer.MIN_VALUE);
         String host = node.getNode("redis", "host").getString();
         String password = node.getNode("redis", "password").getString();
-        String encryptString = node.getNode("motd", "encryption").getString();
+        String encryptString = node.getNode("motd", "encryption").getString(UUID.randomUUID().toString());
         System.out.println(port + " " + host + " " + password);
 
-        if (port == Integer.MIN_VALUE || host == null || password == null || encryptString == null) {
+        if (port == Integer.MIN_VALUE || host == null || password == null) {
             try {
                 node.getNode("redis", "port").setValue(Integer.MIN_VALUE);
                 node.getNode("redis", "host").setValue(null);
                 node.getNode("redis", "password").setValue(null);
-                node.getNode("motd", "encryption").setValue(null);
+                node.getNode("motd", "encryption").setValue(UUID.randomUUID().toString());
                 loader.save(node);
             } catch (IOException e) {
                 throw new RuntimeException(e);

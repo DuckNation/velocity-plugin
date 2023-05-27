@@ -8,7 +8,7 @@ public class ChangeMotdImage implements RawCommand {
     public void execute(final Invocation invocation) {
         String url;
         if (invocation.arguments().length() == 0) {
-            url = "http://quack.boo/server_motd.png";
+            url = "https://quack.boo/server_motd.png";
         } else {
             url = invocation.arguments();
         }
