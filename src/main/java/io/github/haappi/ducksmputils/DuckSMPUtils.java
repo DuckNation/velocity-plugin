@@ -88,6 +88,8 @@ public class DuckSMPUtils {
 
         commandManager.register(nbanmeta, networkBan);
 
+        commandManager.register("message", new Message(), "msg", "tell", "whisper", "w", "m");
+        commandManager.register("reply", new Reply(), "r");
 
         BrigadierCommand networkUnban = NetworkUnban.createBrigadierCommand(proxy);
 
