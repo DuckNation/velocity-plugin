@@ -14,13 +14,17 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.github.haappi.ducksmputils.Enums.REQUEST_ONLINE;
 
 public class DiscordChat {
+    public static HashSet<UUID> staffChatEnabled = new HashSet<>();
+
     private final ProxyServer server;
     JedisPubSub jedisPubSub = new JedisPubSub() {
 
@@ -36,8 +40,8 @@ public class DiscordChat {
             }
 
             Component deserialized = DuckSMPUtils.miniMessage.deserialize(_message);
-            if (_channel.equals("operator_chat")) {
-                server.getAllPlayers().stream().filter(player -> player.hasPermission("duck.operator_chat")).forEach(player -> player.sendMessage(deserialized));
+            if (_channel.equals(Enums.STAFF_CHAT.toString())) {
+                server.getAllPlayers().stream().filter(player -> player.hasPermission("duck." + Enums.STAFF_CHAT)).forEach(player -> player.sendMessage(deserialized));
                 return;
             }
             server.getAllPlayers().forEach(player -> player.sendMessage(deserialized));
@@ -83,6 +87,12 @@ public class DiscordChat {
     @Subscribe(order = PostOrder.LAST)
     public void onPlayerChat(PlayerChatEvent event) {
         if (event.getResult() == PlayerChatEvent.ChatResult.denied()) {
+            return;
+        }
+        if (staffChatEnabled.contains(event.getPlayer().getUniqueId())) {
+            write(String.format("**%s**: %s", event.getPlayer().getUsername(), event.getMessage()), Enums.STAFF_CHAT);
+            server.getAllPlayers().stream().filter(player -> player.hasPermission("duck." + Enums.STAFF_CHAT)).forEach(player -> player.sendMessage(Component.text("[STAFF] ", NamedTextColor.RED).append(Component.text(String.format("[%s] %s", event.getPlayer().getUsername(), event.getMessage()), NamedTextColor.GOLD))));
+            event.setResult(PlayerChatEvent.ChatResult.denied());
             return;
         }
         String serverName = getServerName(event.getPlayer().getCurrentServer().orElse(null)).toUpperCase();

@@ -95,13 +95,20 @@ public class DuckSMPUtils {
 
 
         CommandMeta nunbanmeta = commandManager.metaBuilder("nunban")
-                // This will create a new alias for the command "/test"
-                // with the same arguments and functionality
                 .aliases("networkunban")
                 .plugin(this)
                 .build();
 
         commandManager.register(nunbanmeta, networkUnban);
+
+
+        CommandMeta staffChat = commandManager.metaBuilder("staff-chat")
+                .aliases("sc")
+                .plugin(this)
+                .build();
+
+        commandManager.register(staffChat, new StaffChat());
+
 
         proxy.getEventManager().register(this, new DiscordChat());
         proxy.getEventManager().register(this, new NetworkBan());

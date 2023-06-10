@@ -8,7 +8,7 @@ public enum Enums {
     DEATH("death"),
 
 
-    REQUEST_ONLINE("request-online");
+    REQUEST_ONLINE("request-online"), STAFF_CHAT("staff_chat");
 
     private final String name;
 
