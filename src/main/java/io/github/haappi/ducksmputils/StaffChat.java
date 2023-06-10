@@ -24,6 +24,6 @@ public class StaffChat implements RawCommand {
 
     @Override
     public boolean hasPermission(Invocation invocation) {
-        return invocation.source().hasPermission("duck.staff_chat");
+        return invocation.source().hasPermission("duck." + Enums.STAFF_CHAT);
     }
 }
