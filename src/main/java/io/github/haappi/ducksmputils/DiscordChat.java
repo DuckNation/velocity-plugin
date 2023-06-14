@@ -3,28 +3,22 @@ package io.github.haappi.ducksmputils;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.github.haappi.ducksmputils.Enums.REQUEST_ONLINE;
 
 public class DiscordChat {
-    public static HashSet<UUID> staffChatEnabled = new HashSet<>();
-
     private final ProxyServer server;
     JedisPubSub jedisPubSub = new JedisPubSub() {
 
@@ -40,8 +34,9 @@ public class DiscordChat {
             }
 
             Component deserialized = DuckSMPUtils.miniMessage.deserialize(_message);
-            if (_channel.equals(Enums.STAFF_CHAT.toString())) {
-                server.getAllPlayers().stream().filter(player -> player.hasPermission("duck." + Enums.STAFF_CHAT)).forEach(player -> player.sendMessage(deserialized));
+            String staffChatEnum = Enums.STAFF_CHAT.toString();
+            if (_channel.equals(staffChatEnum)) {
+                server.getAllPlayers().stream().filter(player -> player.hasPermission("duck." + staffChatEnum)).forEach(player -> player.sendMessage(deserialized));
                 return;
             }
             server.getAllPlayers().forEach(player -> player.sendMessage(deserialized));
@@ -82,29 +77,6 @@ public class DiscordChat {
 
     private String getServerName(ServerConnection server) {
         return server == null ? "unknown" : server.getServerInfo().getName();
-    }
-
-    @Subscribe(order = PostOrder.LAST)
-    public void onPlayerChat(PlayerChatEvent event) {
-        if (event.getResult() == PlayerChatEvent.ChatResult.denied()) {
-            return;
-        }
-        if (staffChatEnabled.contains(event.getPlayer().getUniqueId())) {
-            write(String.format("**%s**: %s", event.getPlayer().getUsername(), event.getMessage()), Enums.STAFF_CHAT);
-            server.getAllPlayers().stream().filter(player -> player.hasPermission("duck." + Enums.STAFF_CHAT)).forEach(player -> player.sendMessage(Component.text("[STAFF] ", NamedTextColor.RED).append(Component.text(String.format("[%s] %s", event.getPlayer().getUsername(), event.getMessage()), NamedTextColor.GOLD))));
-            event.setResult(PlayerChatEvent.ChatResult.denied());
-            return;
-        }
-        String serverName = getServerName(event.getPlayer().getCurrentServer().orElse(null)).toUpperCase();
-        write(String.format("[%s] **%s**: %s", serverName, event.getPlayer().getUsername(), event.getMessage()), Enums.CHAT);
-
-        NamedTextColor serverColor = NamedTextColor.WHITE;
-
-        for (Player player : server.getAllPlayers()) {
-            if (!getServerName(player.getCurrentServer().orElse(null)).toUpperCase().equals(serverName)) {
-                player.sendMessage(Component.text(String.format("[%s] ", serverName), serverColor).append(Component.text(event.getPlayer().getUsername(), NamedTextColor.WHITE)).append(Component.text(": " + event.getMessage())));
-            }
-        }
     }
 
     @Subscribe(order = PostOrder.LAST)

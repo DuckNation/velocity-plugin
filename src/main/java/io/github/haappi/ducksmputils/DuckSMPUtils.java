@@ -9,6 +9,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -26,6 +28,7 @@ import java.util.UUID;
 )
 public class DuckSMPUtils {
     public static final MiniMessage miniMessage = MiniMessage.miniMessage();
+    public static final CloseableHttpClient httpClient = HttpClients.createDefault();
     private static DuckSMPUtils instance;
     private final ProxyServer proxy;
     // https://github.com/Matt-MX/ReconnectVelocity/blob/master/src/main/java/com/mattmx/reconnect/ReconnectVelocity.java#L26
@@ -101,14 +104,23 @@ public class DuckSMPUtils {
 
         commandManager.register(nunbanmeta, networkUnban);
 
+        CommandMeta unverify = commandManager.metaBuilder("unverify")
+                .plugin(this)
+                .build();
+
+        commandManager.register(unverify, new Unverify());
+
+        CommandMeta verify = commandManager.metaBuilder("verify")
+                .plugin(this)
+                .build();
+
+        commandManager.register(verify, new Verify());
+
 
         CommandMeta staffChat = commandManager.metaBuilder("staff-chat")
                 .aliases("sc")
                 .plugin(this)
                 .build();
-
-        commandManager.register(staffChat, new StaffChat());
-
 
         proxy.getEventManager().register(this, new DiscordChat());
         proxy.getEventManager().register(this, new NetworkBan());
@@ -147,6 +159,7 @@ public class DuckSMPUtils {
         String host = node.getNode("redis", "host").getString();
         String password = node.getNode("redis", "password").getString();
         String encryptString = node.getNode("motd", "encryption").getString(UUID.randomUUID().toString());
+        Config.API_KEY = node.getNode("api", "api-key").getString();
         System.out.println(port + " " + host + " " + password);
 
         if (port == Integer.MIN_VALUE || host == null || password == null) {
